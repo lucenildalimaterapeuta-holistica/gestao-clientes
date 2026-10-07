@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão de Clientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primario:#7B5EA7;--primario-escuro:#2D1B4E;--primario-claro:#C4A8D4;--primario-bg:#F3EFF8;
+  --sucesso:#7BBFA0;--sucesso-bg:#EAF5F0;--alerta:#F5A623;--alerta-bg:#FFF8ED;
+  --perigo:#E05C5C;--perigo-bg:#FDF0F0;--cinza:#6B7280;--cinza-bg:#F5F5F5;
+  --branco:#FFFFFF;--texto:#1A1A2E;--borda:#E5DFF0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--primario-bg);color:var(--texto);min-height:100vh}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:700}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+/* Login */
+#tela-login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-box{background:var(--branco);border:1px solid var(--borda);border-radius:16px;padding:36px;width:100%;max-width:400px}
+.login-box h1{font-size:30px;color:var(--primario-escuro);margin-bottom:4px}
+.login-box p{color:var(--cinza);font-size:14px;margin-bottom:22px}
+.login-erro{color:var(--perigo);font-size:13px;min-height:18px;margin-bottom:8px}
+
+/* Header */
+header{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--primario-escuro);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 32px}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--primario-claro);border:2px solid var(--sucesso);color:var(--primario-escuro);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0}
+.header-titulo{flex:1;min-width:0}
+.header-titulo h1{font-size:22px;line-height:1.1}
+.header-titulo span{font-size:12px;opacity:.75}
+.btn{border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:14px;transition:.15s}
+.btn:hover{filter:brightness(.95)}
+.btn-sucesso{background:var(--sucesso);color:var(--primario-escuro)}
+.btn-primario{background:var(--primario);color:#fff}
+.btn-perigo{background:var(--perigo);color:#fff}
+.btn-sec{background:var(--branco);color:var(--cinza);border:1px solid var(--borda)}
+.btn-sair{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);padding:8px 14px}
+
+main{max-width:1200px;margin:0 auto;padding:96px 32px 24px}
+
+/* Alertas */
+#alertas{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid;font-size:14px}
+.banner .ic{font-size:20px}
+.banner.alerta{background:var(--alerta-bg);border-color:var(--alerta)}
+.banner.vencido{background:var(--perigo-bg);border-color:var(--perigo)}
+.banner.recontato{background:var(--primario-bg);border-color:var(--primario)}
+
+/* Resumo */
+.resumo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.resumo-card{background:var(--branco);border:1px solid var(--borda);border-radius:14px;padding:18px;text-align:center}
+.resumo-card .num{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:700;line-height:1}
+.resumo-card .lbl{font-size:13px;color:var(--cinza);margin-top:6px;font-weight:600}
+
+/* Controles */
+.controles{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;align-items:center}
+.busca{flex:1;min-width:220px;padding:11px 14px;border:1px solid var(--borda);border-radius:10px;background:var(--branco)}
+.busca:focus,.campo input:focus,.campo select:focus,.campo textarea:focus{outline:2px solid var(--primario-claro);border-color:var(--primario)}
+.filtros{display:flex;flex-wrap:wrap;gap:8px}
+.filtro{padding:9px 16px;border-radius:20px;border:1px solid var(--borda);background:var(--branco);color:var(--cinza);font-weight:700;font-size:13px}
+.filtro.ativo{background:var(--primario);color:#fff;border-color:var(--primario)}
+
+/* Lista */
+#lista{display:flex;flex-direction:column;gap:10px}
+.card{display:flex;align-items:center;gap:16px;background:var(--branco);border:1px solid var(--borda);border-radius:14px;padding:16px 18px}
+.card.alerta{border-color:var(--alerta);background:var(--alerta-bg)}
+.card.vencido{border-color:var(--perigo);background:var(--perigo-bg)}
+.card.inativo{opacity:.65;background:var(--cinza-bg)}
+.card .avatar{background:var(--primario-claro);border-color:var(--primario-claro)}
+.info{flex:1;min-width:180px}
+.info .nome{font-weight:800;font-size:16px}
+.info .det{font-size:13px;color:var(--cinza);margin-top:2px}
+.info .contato{color:#3f8f6c;font-weight:700;font-size:13px;margin-top:2px}
+.datas{font-size:12px;color:var(--cinza);text-align:right;line-height:1.6;min-width:170px}
+.datas b{color:var(--texto)}
+.acoes{display:flex;gap:6px}
+.acoes button{padding:8px 12px;border-radius:8px;border:1px solid var(--borda);background:var(--branco);font-weight:700;font-size:12px;color:var(--primario)}
+.acoes button.renovar{background:var(--primario);color:#fff;border-color:var(--primario)}
+.acoes button.encerrar{color:var(--perigo)}
+.acoes button.reativar{background:var(--sucesso);color:var(--primario-escuro);border-color:var(--sucesso)}
+.selo{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:800;background:var(--primario-bg);color:var(--primario);border:1px solid var(--primario-claro)}
+.selo.pendente{background:var(--primario);color:#fff}
+.vazio{text-align:center;color:var(--cinza);padding:40px;background:var(--branco);border:1px dashed var(--borda);border-radius:14px}
+
+/* Tags de pagamento */
+.tag{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:800}
+.tag.pix{background:var(--sucesso-bg);color:#2f7a5b}
+.tag.cartao{background:#E8EAFB;color:#4338CA}
+
+/* Modais */
+.overlay{position:fixed;inset:0;background:rgba(45,27,78,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.overlay.aberto{display:flex}
+.modal{position:relative;background:var(--branco);border-radius:16px;padding:32px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:28px;color:var(--primario-escuro);margin-bottom:16px}
+.fechar{position:absolute;top:14px;right:16px;border:none;background:none;font-size:20px;color:var(--cinza)}
+.secao-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--primario);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--borda)}
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;flex:1}
+.campo label{font-size:12px;font-weight:700;color:var(--cinza)}
+.campo input,.campo select,.campo textarea{padding:10px 12px;border:1px solid var(--borda);border-radius:10px;width:100%}
+.campo textarea{resize:vertical;min-height:70px}
+.form-row{display:flex;gap:12px}
+.radio-grupo{display:flex;gap:10px}
+.radio-card{flex:1;text-align:center;padding:10px;border:1px solid var(--borda);border-radius:10px;font-weight:700;font-size:14px;color:var(--cinza);cursor:pointer}
+.radio-card input{display:none}
+.radio-card.sel{border-color:var(--primario);background:var(--primario-bg);color:var(--primario)}
+.modal-acoes{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.aviso{background:var(--alerta-bg);border:1px solid var(--alerta);border-radius:10px;padding:12px;font-size:13px;margin-bottom:14px}
+.hist-item{background:var(--primario-bg);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:13px}
+.hist-item .corpo{flex:1;line-height:1.6}
+.hist-item button{border:1px solid var(--primario-claro);background:var(--branco);color:var(--primario);border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;color:#fff;font-weight:700;font-size:14px;background:var(--primario-escuro);transform:translateY(80px);opacity:0;transition:.3s;z-index:200;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.sucesso{background:#0F6E56}
+#toast.erro{background:#A32D2D}
+
+@media(max-width:700px){
+  header{padding:10px 14px}
+  main{padding:88px 14px 24px}
+  .resumo-grid{grid-template-columns:repeat(2,1fr)}
+  .form-row{flex-direction:column;gap:0}
+  .acoes{flex-direction:column}
+  .card{flex-wrap:wrap}
+  .datas{text-align:left}
+  .modal{padding:24px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login">
+  <div class="login-box">
+    <h1>Gestão de Clientes</h1>
+    <p>Entre com seu e-mail e senha para acessar.</p>
+    <div class="campo"><label>E-mail</label><input type="email" id="login-email" autocomplete="username"></div>
+    <div class="campo"><label>Senha</label><input type="password" id="login-senha" autocomplete="current-password"></div>
+    <div class="login-erro" id="login-erro"></div>
+    <button class="btn btn-primario" style="width:100%" id="btn-login">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <header>
+    <div class="avatar">S</div>
+    <div class="header-titulo"><h1>Sistema de Gestão</h1><span>Controle financeiro de clientes</span></div>
+    <button class="btn btn-sucesso" onclick="abrirNovo()">+ Novo Registro</button>
+    <button class="btn btn-sair" onclick="sair()">Sair</button>
+  </header>
+
+  <main>
+    <div id="alertas"></div>
+    <div class="resumo-grid">
+      <div class="resumo-card"><div class="num" id="c-ativo" style="color:var(--sucesso)">0</div><div class="lbl">Ativos</div></div>
+      <div class="resumo-card"><div class="num" id="c-alerta" style="color:var(--alerta)">0</div><div class="lbl">Renovar em breve</div></div>
+      <div class="resumo-card"><div class="num" id="c-vencido" style="color:var(--perigo)">0</div><div class="lbl">Vencidos</div></div>
+      <div class="resumo-card"><div class="num" id="c-inativo" style="color:var(--cinza)">0</div><div class="lbl">Inativos</div></div>
+    </div>
+    <div class="controles">
+      <input class="busca" id="busca" placeholder="Buscar por nome ou contato...">
+      <div class="filtros" id="filtros">
+        <button class="filtro ativo" data-f="todos">Todos</button>
+        <button class="filtro" data-f="ativo">Ativos</button>
+        <button class="filtro" data-f="alerta">Renovar</button>
+        <button class="filtro" data-f="vencido">Vencidos</button>
+        <button class="filtro" data-f="inativo">Inativos</button>
+      </div>
+    </div>
+    <div id="lista"></div>
+  </main>
+</div>
+
+<!-- MODAL 1: NOVO -->
+<div class="overlay" id="m-novo"><div class="modal">
+  <button class="fechar" onclick="fechar('m-novo')">✕</button>
+  <h2>Novo Registro</h2>
+  <div class="secao-label">Dados pessoais</div>
+  <div class="campo"><label>Nome completo *</label><input id="n-nome"></div>
+  <div class="campo"><label>Contato / WhatsApp com DDD *</label><input id="n-contato" placeholder="(00) 00000-0000"></div>
+  <div id="n-plano-box"></div>
+  <div class="secao-label">Observações</div>
+  <div class="campo"><textarea id="n-obs" placeholder="Observações (opcional)"></textarea></div>
+  <div class="modal-acoes">
+    <button class="btn btn-sec" onclick="fechar('m-novo')">Cancelar</button>
+    <button class="btn btn-primario" onclick="salvarNovo()">Salvar</button>
+  </div>
+</div></div>
+
+<!-- MODAL 2: RENOVAR -->
+<div class="overlay" id="m-renovar"><div class="modal">
+  <button class="fechar" onclick="fechar('m-renovar')">✕</button>
+  <h2>Renovar Plano</h2>
+  <div id="r-hist"></div>
+  <div id="r-plano-box"></div>
+  <div class="modal-acoes">
+    <button class="btn btn-sec" onclick="fechar('m-renovar')">Cancelar</button>
+    <button class="btn btn-primario" onclick="confirmarRenovar()">Confirmar renovação</button>
+  </div>
+</div></div>
+
+<!-- MODAL 3: ENCERRAR -->
+<div class="overlay" id="m-encerrar"><div class="modal">
+  <button class="fechar" onclick="fechar('m-encerrar')">✕</button>
+  <h2>Encerrar Contrato</h2>
+  <div class="aviso">⚠️ O registro será marcado como <b>inativo</b> e um lembrete de recontato será gerado <b>30 dias</b> após o encerramento.</div>
+  <div class="campo"><label>Data de encerramento *</label><input type="date" id="e-data"></div>
+  <div class="campo"><label>Motivo (opcional)</label><textarea id="e-motivo"></textarea></div>
+  <div class="modal-acoes">
+    <button class="btn btn-sec" onclick="fechar('m-encerrar')">Cancelar</button>
+    <button class="btn btn-perigo" onclick="confirmarEncerrar()">Encerrar</button>
+  </div>
+</div></div>
+
+<!-- MODAL 4: HISTÓRICO -->
+<div class="overlay" id="m-hist"><div class="modal">
+  <button class="fechar" onclick="fechar('m-hist')">✕</button>
+  <h2>Histórico Completo</h2>
+  <div id="h-lista"></div>
+  <div class="modal-acoes"><button class="btn btn-sec" onclick="fechar('m-hist')">Fechar</button></div>
+</div></div>
+
+<!-- MODAL 5: EDITAR HISTÓRICO -->
+<div class="overlay" id="m-edit"><div class="modal">
+  <button class="fechar" onclick="fechar('m-edit')">✕</button>
+  <h2>Editar Registro</h2>
+  <div id="ed-plano-box"></div>
+  <div class="modal-acoes">
+    <button class="btn btn-sec" onclick="fechar('m-edit')">Cancelar</button>
+    <button class="btn btn-primario" onclick="salvarEdicao()">Salvar</button>
+  </div>
+</div></div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+// INSIRA SUA CONFIGURAÇÃO FIREBASE AQUI
+const firebaseConfig = {
+  apiKey: "AIzaSyBtVGh6k_JZ0dxuWVh51rx8ggCHDhijGqY",
+  authDomain: "gest-6485e.firebaseapp.com",
+  projectId: "gest-6485e",
+  storageBucket: "gest-6485e.firebasestorage.app",
+  messagingSenderId: "795027010785",
+  appId: "1:795027010785:web:a44fa05b9351b4d9e973a0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const COL = collection(db, "registros");
+
+let registros = [];
+let filtro = "todos";
+let unsub = null;
+let idAtual = null;      // registro em operação
+let idxHist = null;      // índice do histórico em edição
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hojeISO = () => { const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const fmt = iso => iso ? iso.split("-").reverse().join("/") : "—";
+const hoje0 = () => { const h = new Date(); h.setHours(0,0,0,0); return h; };
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg, tipo = "") {
+  const t = $("toast");
+  t.textContent = msg; t.className = tipo;
+  void t.offsetWidth;
+  t.classList.add("show");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ---------- Modais ---------- */
+const abrir = id => $(id).classList.add("aberto");
+const fechar = id => $(id).classList.remove("aberto");
+window.fechar = fechar;
+document.querySelectorAll(".overlay").forEach(o =>
+  o.addEventListener("mousedown", e => { if (e.target === o) o.classList.remove("aberto"); }));
+
+/* ---------- Bloco de formulário de plano (reutilizado) ---------- */
+function blocoPlano(p, d = {}) {
+  const planos = ["Mensal","Bimestral","Trimestral","Outro"];
+  const forma = d.forma || "Pix";
+  return `
+  <div class="secao-label">Plano e pagamento</div>
+  <div class="campo"><label>Plano</label>
+    <select id="${p}-plano">${planos.map(x => `<option ${x===d.plano?"selected":""}>${x}</option>`).join("")}</select></div>
+  <div class="campo"><label>Data de pagamento</label><input type="date" id="${p}-pag" value="${d.pagamento||hojeISO()}"></div>
+  <div class="campo"><label>Forma de pagamento</label>
+    <div class="radio-grupo" data-p="${p}">
+      ${["Pix","Cartão"].map(f => `<label class="radio-card ${f===forma?"sel":""}"><input type="radio" name="${p}-forma" value="${f}" ${f===forma?"checked":""}>${f}</label>`).join("")}
+    </div></div>
+  <div class="secao-label">Vigência</div>
+  <div class="form-row">
+    <div class="campo"><label>Data de início</label><input type="date" id="${p}-ini" value="${d.inicio||hojeISO()}"></div>
+    <div class="campo"><label>Data de vencimento</label><input type="date" id="${p}-venc" value="${d.vencimento||""}"></div>
+  </div>`;
+}
+document.addEventListener("change", e => {
+  if (e.target.matches('.radio-grupo input[type="radio"]')) {
+    e.target.closest(".radio-grupo").querySelectorAll(".radio-card").forEach(c => c.classList.remove("sel"));
+    e.target.closest(".radio-card").classList.add("sel");
+  }
+});
+function lerPlano(p) {
+  const f = document.querySelector(`input[name="${p}-forma"]:checked`);
+  return {
+    plano: $(p+"-plano").value,
+    pagamento: $(p+"-pag").value,
+    forma: f ? f.value : "Pix",
+    inicio: $(p+"-ini").value,
+    vencimento: $(p+"-venc").value
+  };
+}
+const tagForma = f => `<span class="tag ${f==="Pix"?"pix":"cartao"}">${esc(f||"—")}</span>`;
+
+/* ---------- Status ---------- */
+function calcularStatus(registro) {
+  if (registro.status === 'inativo') return 'inativo';
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const venc = new Date(registro.vencimentoAtual + 'T00:00:00');
+  const diff = Math.floor((venc - hoje) / 86400000);
+  if (diff < 0) return 'vencido';
+  if (diff <= 15) return 'alerta';
+  return 'ativo';
+}
+function diasAte(iso) {
+  return Math.floor((new Date(iso + "T00:00:00") - hoje0()) / 86400000);
+}
+function dataRecontato(r) {
+  if (r.status !== "inativo" || !r.dataEncerramento) return null;
+  const d = new Date(r.dataEncerramento + "T00:00:00");
+  d.setDate(d.getDate() + 30);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,10);
+}
+
+/* ---------- Render ---------- */
+function render() {
+  const lista = registros.map(r => ({ ...r, _s: calcularStatus(r), _rec: dataRecontato(r) }));
+
+  // contadores
+  const cont = { ativo:0, alerta:0, vencido:0, inativo:0 };
+  lista.forEach(r => cont[r._s]++);
+  Object.keys(cont).forEach(k => $("c-"+k).textContent = cont[k]);
+
+  // banners
+  const banners = [];
+  lista.filter(r => r._s === "vencido").forEach(r => {
+    const d = Math.abs(diasAte(r.vencimentoAtual));
+    banners.push(`<div class="banner vencido"><span class="ic">🔴</span><div><b>${esc(r.nome)}</b> — plano vencido há ${d} dia${d!==1?"s":""}. Entre em contato para renovar.</div></div>`);
+  });
+  lista.filter(r => r._s === "alerta").forEach(r => {
+    const d = diasAte(r.vencimentoAtual);
+    banners.push(`<div class="banner alerta"><span class="ic">⚠️</span><div><b>${esc(r.nome)}</b> — ${d===0?"vence hoje":`vence em ${d} dia${d!==1?"s":""}`}.</div></div>`);
+  });
+  lista.filter(r => r._rec && diasAte(r._rec) <= 0).forEach(r => {
+    banners.push(`<div class="banner recontato"><span class="ic">📞</span><div><b>${esc(r.nome)}</b> — hora de fazer o recontato (contrato encerrado em ${fmt(r.dataEncerramento)}).</div></div>`);
+  });
+  $("alertas").innerHTML = banners.join("");
+
+  // filtro + busca
+  const q = $("busca").value.trim().toLowerCase();
+  const qd = q.replace(/\D/g, "");
+  const vis = lista.filter(r => {
+    if (filtro !== "todos" && r._s !== filtro) return false;
+    if (!q) return true;
+    return r.nome.toLowerCase().includes(q) ||
+      (r.contato || "").toLowerCase().includes(q) ||
+      (qd && (r.contato || "").replace(/\D/g, "").includes(qd));
+  }).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+  if (!vis.length) {
+    $("lista").innerHTML = `<div class="vazio">Nenhum registro encontrado.</div>`;
+    return;
+  }
+  $("lista").innerHTML = vis.map(r => {
+    let selo = "";
+    if (r._rec) {
+      const pend = diasAte(r._rec) <= 0;
+      selo = pend
+        ? `<div class="selo pendente">📞 Recontato pendente</div>`
+        : `<div class="selo">Recontatar em ${fmt(r._rec)}</div>`;
+    }
+    const acoes = r._s === "inativo"
+      ? `<button class="reativar" onclick="reativar('${r.id}')">Reativar</button><button onclick="abrirHist('${r.id}')">Histórico</button>`
+      : `<button class="renovar" onclick="abrirRenovar('${r.id}')">Renovar</button><button class="encerrar" onclick="abrirEncerrar('${r.id}')">Encerrar</button><button onclick="abrirHist('${r.id}')">Histórico</button>`;
+    return `<div class="card ${r._s}">
+      <div class="avatar">${esc((r.nome[0]||"?").toUpperCase())}</div>
+      <div class="info">
+        <div class="nome">${esc(r.nome)}</div>
+        <div class="det">Plano ${esc(r.planoAtual)} ${tagForma(r.formaPagamentoAtual)}</div>
+        <div class="contato">${esc(r.contato)}</div>
+        ${selo}
+      </div>
+      <div class="datas">
+        Início: <b>${fmt(r.inicioAtual)}</b><br>
+        Pagamento: <b>${fmt(r.dataPagamentoAtual)}</b><br>
+        Vencimento: <b>${fmt(r.vencimentoAtual)}</b>
+      </div>
+      <div class="acoes">${acoes}</div>
+    </div>`;
+  }).join("");
+}
+
+$("busca").addEventListener("input", render);
+$("filtros").addEventListener("click", e => {
+  const b = e.target.closest(".filtro"); if (!b) return;
+  filtro = b.dataset.f;
+  document.querySelectorAll(".filtro").forEach(x => x.classList.toggle("ativo", x === b));
+  render();
+});
+
+/* ---------- Ações ---------- */
+const get = id => registros.find(r => r.id === id);
+
+window.abrirNovo = () => {
+  $("n-nome").value = ""; $("n-contato").value = ""; $("n-obs").value = "";
+  $("n-plano-box").innerHTML = blocoPlano("n");
+  abrir("m-novo");
+};
+window.salvarNovo = async () => {
+  const nome = $("n-nome").value.trim(), contato = $("n-contato").value.trim();
+  const p = lerPlano("n");
+  if (!nome || !contato) return toast("Preencha nome e contato.", "erro");
+  if (!p.vencimento) return toast("Informe a data de vencimento.", "erro");
+  try {
+    await addDoc(COL, {
+      nome, contato,
+      planoAtual: p.plano, dataPagamentoAtual: p.pagamento, formaPagamentoAtual: p.forma,
+      inicioAtual: p.inicio, vencimentoAtual: p.vencimento,
+      status: "ativo", observacoes: $("n-obs").value.trim(),
+      dataEncerramento: null, motivoBaixa: null,
+      historico: [{ plano:p.plano, pagamento:p.pagamento, forma:p.forma, inicio:p.inicio, vencimento:p.vencimento, registradoEm:new Date().toISOString() }]
+    });
+    fechar("m-novo"); toast("Registro criado!", "sucesso");
+  } catch (e) { console.error(e); toast("Erro ao salvar.", "erro"); }
+};
+
+function histCards(r) {
+  const h = r.historico || [];
+  if (!h.length) return "";
+  return `<div class="secao-label" style="margin-top:0">Renovações anteriores</div>` +
+    h.slice().reverse().map(i => `<div class="hist-item"><div class="corpo"><b>${esc(i.plano)}</b> ${tagForma(i.forma)}<br>Pago em ${fmt(i.pagamento)} · ${fmt(i.inicio)} → ${fmt(i.vencimento)}</div></div>`).join("");
+}
+window.abrirRenovar = id => {
+  idAtual = id; const r = get(id);
+  $("r-hist").innerHTML = histCards(r);
+  $("r-plano-box").innerHTML = blocoPlano("r", { plano: r.planoAtual, forma: r.formaPagamentoAtual, inicio: r.vencimentoAtual && r.vencimentoAtual > hojeISO() ? r.vencimentoAtual : hojeISO() });
+  abrir("m-renovar");
+};
+window.confirmarRenovar = async () => {
+  const r = get(idAtual), p = lerPlano("r");
+  if (!p.vencimento) return toast("Informe a data de vencimento.", "erro");
+  try {
+    await updateDoc(doc(db, "registros", idAtual), {
+      planoAtual: p.plano, dataPagamentoAtual: p.pagamento, formaPagamentoAtual: p.forma,
+      inicioAtual: p.inicio, vencimentoAtual: p.vencimento,
+      historico: [...(r.historico || []), { ...p, registradoEm: new Date().toISOString() }]
+    });
+    fechar("m-renovar"); toast("Plano renovado!", "sucesso");
+  } catch (e) { console.error(e); toast("Erro ao renovar.", "erro"); }
+};
+
+window.abrirEncerrar = id => {
+  idAtual = id; $("e-data").value = hojeISO(); $("e-motivo").value = "";
+  abrir("m-encerrar");
+};
+window.confirmarEncerrar = async () => {
+  const data = $("e-data").value;
+  if (!data) return toast("Informe a data de encerramento.", "erro");
+  try {
+    await updateDoc(doc(db, "registros", idAtual), {
+      status: "inativo", dataEncerramento: data, motivoBaixa: $("e-motivo").value.trim() || null
+    });
+    fechar("m-encerrar"); toast("Contrato encerrado.", "sucesso");
+  } catch (e) { console.error(e); toast("Erro ao encerrar.", "erro"); }
+};
+window.reativar = async id => {
+  try {
+    await updateDoc(doc(db, "registros", id), { status: "ativo", dataEncerramento: null, motivoBaixa: null });
+    toast("Registro reativado!", "sucesso");
+  } catch (e) { console.error(e); toast("Erro ao reativar.", "erro"); }
+};
+
+function renderHist() {
+  const r = get(idAtual); if (!r) return;
+  const h = r.historico || [];
+  $("h-lista").innerHTML = h.length
+    ? h.map((i, idx) => `<div class="hist-item"><div class="corpo"><b>${esc(i.plano)}</b> ${tagForma(i.forma)}<br>Pagamento: ${fmt(i.pagamento)}<br>Vigência: ${fmt(i.inicio)} → ${fmt(i.vencimento)}</div><button onclick="abrirEdicao(${idx})">Editar</button></div>`).reverse().join("")
+    : `<div class="vazio">Sem histórico.</div>`;
+}
+window.abrirHist = id => { idAtual = id; renderHist(); abrir("m-hist"); };
+
+window.abrirEdicao = idx => {
+  idxHist = idx; const i = get(idAtual).historico[idx];
+  $("ed-plano-box").innerHTML = blocoPlano("ed", i);
+  abrir("m-edit");
+};
+window.salvarEdicao = async () => {
+  const r = get(idAtual), p = lerPlano("ed");
+  if (!p.vencimento) return toast("Informe a data de vencimento.", "erro");
+  const h = (r.historico || []).map((x, i) => i === idxHist ? { ...x, ...p } : x);
+  const upd = { historico: h };
+  if (idxHist === h.length - 1) {
+    Object.assign(upd, { planoAtual:p.plano, dataPagamentoAtual:p.pagamento, formaPagamentoAtual:p.forma, inicioAtual:p.inicio, vencimentoAtual:p.vencimento });
+  }
+  try {
+    await updateDoc(doc(db, "registros", idAtual), upd);
+    fechar("m-edit"); toast("Registro atualizado!", "sucesso");
+  } catch (e) { console.error(e); toast("Erro ao salvar.", "erro"); }
+};
+
+/* ---------- Auth ---------- */
+async function entrar() {
+  $("login-erro").textContent = "";
+  try {
+    await signInWithEmailAndPassword(auth, $("login-email").value.trim(), $("login-senha").value);
+  } catch (e) {
+    console.error(e);
+    $("login-erro").textContent = "E-mail ou senha inválidos.";
+  }
+}
+$("btn-login").addEventListener("click", entrar);
+$("login-senha").addEventListener("keydown", e => { if (e.key === "Enter") entrar(); });
+window.sair = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    $("tela-login").style.display = "none";
+    $("app").style.display = "block";
+    unsub = onSnapshot(COL, snap => {
+      registros = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+      if ($("m-hist").classList.contains("aberto")) renderHist();
+    }, err => { console.error(err); toast("Erro ao carregar dados.", "erro"); });
+  } else {
+    if (unsub) { unsub(); unsub = null; }
+    registros = [];
+    $("app").style.display = "none";
+    $("tela-login").style.display = "flex";
+  }
+});
+</script>
+</body>
+</html>
